@@ -80,7 +80,6 @@ def get_appinputs(json_data):
         appinputs["sequence_sizes"].append(get_sequence_size(url))
 
     appinputs["num_sequences"] = num_sequences
-    appinputs["experiment_id"] = json_data["id"]
 
     return appinputs
 
@@ -98,7 +97,9 @@ def generate_hpcadvisor_json(json_data):
         "nnodes": 1,
         "appinputs": appinputs,
     }
-    print(new_json)
+    new_json["tags"] = {}
+    new_json["tags"]["tes_experiment_id"] = json_data["id"]
+    print(json.dumps(new_json, indent=4))
 
 
 url, auth = get_query_input()
