@@ -54,15 +54,49 @@ def get_json(url, auth):
     return None
 
 
+def get_sequence_size(url):
+
+    response = requests.head(url)
+    file_size = response.headers.get("Content-Length")
+
+    if file_size:
+        return file_size
+    else:
+        return 0
+
+
+def get_appinputs(json_data):
+
+    received_appinputs = json_data["inputs"]
+
+    num_sequences = 0
+    appinputs = {}
+    appinputs["sequence_sizes"] = []
+    for appinput in received_appinputs:
+        print("name: ", appinput["name"])
+        url = appinput["url"]
+        print("size = ", get_sequence_size(url))
+        num_sequences += 1
+        appinputs["sequence_sizes"].append(get_sequence_size(url))
+
+    appinputs["num_sequences"] = num_sequences
+    appinputs["experiment_id"] = json_data["id"]
+
+    return appinputs
+
+
 def generate_hpcadvisor_json(json_data):
     print("Registering data to HPCAdvisor")
     print(json_data)
+    appinputs = get_appinputs(json_data)
+
     new_json = {
         "deployment": None,
         "appname": "tes",
         "total_cores": json_data["resources"]["cpu_cores"],
         "sku": json_data["resources"]["backend_parameters"]["vm_size"],
         "nnodes": 1,
+        "appinputs": appinputs,
     }
     print(new_json)
 
