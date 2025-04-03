@@ -87,14 +87,21 @@ def generate_hpcadvisor_json(json_data):
     print("Registering data to HPCAdvisor")
     # print(json_data)
 
+    if len(json_data["inputs"]) == 0:
+        print("No inputs found. Ignoring this task.")
+
+        return False
+
+    print("input urls: ", json_data["inputs"][0]["url"])
+
+    if not json_data["resources"]["backend_parameters"]:
+        print("No backend parameters found. Ignoring this task.")
+        return False
+
     appinputs = get_appinputs(json_data)
     deployment = get_deployment()
 
-    # TODO: not all tasks have the right data
-    try:
-        sku = json_data["resources"]["backend_parameters"]["vm_size"]
-    except KeyError:
-        sku = "unknown"
+    sku = json_data["resources"]["backend_parameters"]["vm_size"]
 
     new_json = {
         "deployment": deployment,
@@ -108,14 +115,19 @@ def generate_hpcadvisor_json(json_data):
     new_json["tags"]["tes_experiment_id"] = json_data["id"]
     print(json.dumps(new_json, indent=4))
 
+    return True
+
 
 def extract_data_for_task_id(url, auth, task_id):
 
     url = f"{url}{task_id}{url_view_parameter}"
     json_data = get_json(url, auth)
 
+    generated_json = False
     if json_data:
-        generate_hpcadvisor_json(json_data)
+        generated_json = generate_hpcadvisor_json(json_data)
+
+    return generated_json
 
 
 def get_valid_task_ids(data):
@@ -154,8 +166,17 @@ def extract_data_all_tasks(url, auth):
     valid_task_ids = get_all_valid_task_ids(url, auth)
     print("Valid task ids: ", valid_task_ids)
 
+    recorded_task_ids = 0
+    not_recorded_task_ids = 0
     for task_id in valid_task_ids:
-        extract_data_for_task_id(url, auth, task_id)
+        recorded = extract_data_for_task_id(url, auth, task_id)
+        if recorded:
+            recorded_task_ids += 1
+        else:
+            not_recorded_task_ids += 1
+
+    print("Recorded task ids: ", recorded_task_ids)
+    print("Not recorded task ids: ", not_recorded_task_ids)
 
 
 def extract_data(url, auth, task_id):
