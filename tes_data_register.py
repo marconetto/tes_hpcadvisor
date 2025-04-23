@@ -192,9 +192,9 @@ def extract_data_all_tasks(url, auth):
         if generated_json:
             recorded_task_ids += 1
             new_entries_json.append(generated_json)
-            if recorded_task_ids == 2:
-                print("Stopping after 2 tasks")
-                break
+            # if recorded_task_ids == 2:
+            # print("Stopping after 2 tasks")
+            # break
         else:
             not_recorded_task_ids += 1
 
@@ -240,7 +240,14 @@ def store_new_entries(new_entries_json):
     if not datapoints_label in existing_data:
         existing_data[datapoints_label] = []
 
-    existing_data[datapoints_label].append(new_entries_json)
+    # Ensure the new data points are lists of dictionaries and append
+    #    if isinstance(new_entries_json, list) and all(
+    #       isinstance(entry, dict) for entry in new_entries_json
+    #  ):
+    print(new_entries_json)
+    existing_data[datapoints_label].extend(new_entries_json)
+    # else:
+    #    print("New data is not in the expected format")
 
     with open(file_path, "w") as file:
         json.dump(existing_data, file, indent=2)
